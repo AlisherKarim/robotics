@@ -30,6 +30,10 @@
 import rospy
 from geometry_msgs.msg import Twist
 import sys, select, os
+import copy
+import moveit_commander
+import moveit_msgs.msg
+import geometry_msgs.msg
 if os.name == 'nt':
   import msvcrt, time
 else:
@@ -150,6 +154,15 @@ if __name__=="__main__":
     control_linear_vel  = 0.0
     control_angular_vel = 0.0
 
+    # intialize manipulator
+
+    moveit_commander.roscpp_initialize(sys.argv) #moveit itself init
+    robot = moveit_commander.RobotCommander() # robot’s kinematic model and the robot’s current joint states
+    scene = moveit_commander.PlanningSceneInterface() #remote interface for getting, setting, and updating the robot’s internal understanding of the surrounding world
+    arm = moveit_commander.MoveGroupCommander('arm') # name of movegroup 1 is “arm”
+    gripper = moveit_commander.MoveGroupCommander('gripper') #name of movegroup 2 is “gripper”
+    arm.set_planning_time(2) # Thats the value TA likes to use
+
     try:
         print(msg)
         while not rospy.is_shutdown():
@@ -176,6 +189,49 @@ if __name__=="__main__":
                 target_angular_vel  = 0.0
                 control_angular_vel = 0.0
                 print(vels(target_linear_vel, target_angular_vel))
+            elif key == '0':
+                joint_values = arm.get_current_joint_values() # How to get joint states
+                joint_values[0] = 0
+                joint_values[1] = 0
+                joint_values[2] = 0
+                joint_values[3] = 0
+
+                print("Init Position...")
+
+
+                arm.go(joints = joint_values, wait = True)
+
+                print("[!] Wait until execution of arm finishes...")
+                # rospy.sleep(5)
+
+                arm.stop()
+                arm.clear_pose_targets()
+                
+                print("[!] Execution of Init Pose finished")
+            elif key == '1':
+                joint_values = arm.get_current_joint_values() # How to get joint states
+                joint_values[0] = -0
+                joint_values[1] = -1.0
+                joint_values[2] = 0.3
+                joint_values[3] = 0.7
+
+                print("Home Position...")
+
+
+                arm.go(joints = joint_values, wait = True)
+
+                print("[!] Wait until execution of arm finishes...")
+                # rospy.sleep(5)
+
+                arm.stop()
+                arm.clear_pose_targets()
+                
+                print("[!] Execution of Home Pose finished...")
+
+            elif key == 'g':
+                continue
+            elif key == 'f':
+                continue
             else:
                 if (key == '\x03') or (key == 'q'):
                     break

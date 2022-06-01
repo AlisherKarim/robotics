@@ -14,24 +14,45 @@ def main():
 	gripper = moveit_commander.MoveGroupCommander('gripper') #name of movegroup 2 is “gripper”
 	arm.set_planning_time(2) # Thats the value TA likes to use
 
+	while True:
+		command = input("Home or Init")
 
-	joint_values = arm.get_current_joint_values() #How to get joint states
-	joint_values[0] = 0
-	joint_values[1] = 0
-	joint_values[2] = 0
-	joint_values[3] = 0
+		if command == "I":
+			joint_values = arm.get_current_joint_values() #How to get joint states
+			joint_values[0] = 0
+			joint_values[1] = 0
+			joint_values[2] = 0
+			joint_values[3] = 0
 
-	print("Starting...")
+			print("Init Position...")
 
 
-	arm.go(joints = joint_values, wait = True)
+			arm.go(joints = joint_values, wait = True)
 
-	print("Execution finished")
+			print("Execution finished")
 
-	rospy.sleep(5)
+			rospy.sleep(5)
 
-	arm.stop()
-	arm.clear_pose_targets()
+			arm.stop()
+			arm.clear_pose_targets()
+		else:
+			joint_values = arm.get_current_joint_values() #How to get joint states
+			joint_values[0] = -0
+			joint_values[1] = -1.0
+			joint_values[2] = 0.3
+			joint_values[3] = 0.7
+
+			print("Home Position...")
+
+
+			arm.go(joints = joint_values, wait = True)
+
+			print("Execution finished")
+
+			rospy.sleep(5)
+
+			arm.stop()
+			arm.clear_pose_targets()			
 
 
 
