@@ -135,35 +135,58 @@ if __name__=="__main__":
     arm = moveit_commander.MoveGroupCommander('arm') # name of movegroup 1 is “arm”
     gripper = moveit_commander.MoveGroupCommander('gripper') #name of movegroup 2 is “gripper”
     arm.set_planning_time(2) # Thats the value TA likes to use
+    # gripper.set_planning_time(2)
 
     try:
         print(msg)
         while not rospy.is_shutdown():
+            
             key = getKey()
             if key == '8' :
                 target_linear_vel = checkLinearLimitVelocity(target_linear_vel + LIN_VEL_STEP_SIZE)
-                status = status + 1
+                status = status + 5
+                print("===================================================")
                 print(vels(target_linear_vel,target_angular_vel))
+                print(joints(arm.get_current_joint_values()))
+                print(kinematics([arm.get_current_pose().pose.position.x, arm.get_current_pose().pose.position.y, arm.get_current_pose().pose.position.z]))
+                print("===================================================")
             elif key == '2' :
                 target_linear_vel = checkLinearLimitVelocity(target_linear_vel - LIN_VEL_STEP_SIZE)
-                status = status + 1
+                status = status + 5
+                print("===================================================")
                 print(vels(target_linear_vel,target_angular_vel))
+                print(joints(arm.get_current_joint_values()))
+                print(kinematics([arm.get_current_pose().pose.position.x, arm.get_current_pose().pose.position.y, arm.get_current_pose().pose.position.z]))
+                print("===================================================")
             elif key == '4' :
                 target_angular_vel = checkAngularLimitVelocity(target_angular_vel + ANG_VEL_STEP_SIZE)
-                status = status + 1
+                status = status + 5
+                print("===================================================")
                 print(vels(target_linear_vel,target_angular_vel))
+                print(joints(arm.get_current_joint_values()))
+                print(kinematics([arm.get_current_pose().pose.position.x, arm.get_current_pose().pose.position.y, arm.get_current_pose().pose.position.z]))
+                print("===================================================")
             elif key == '6' :
                 target_angular_vel = checkAngularLimitVelocity(target_angular_vel - ANG_VEL_STEP_SIZE)
-                status = status + 1
+                status = status + 5
+                print("===================================================")
                 print(vels(target_linear_vel,target_angular_vel))
+                print(joints(arm.get_current_joint_values()))
+                print(kinematics([arm.get_current_pose().pose.position.x, arm.get_current_pose().pose.position.y, arm.get_current_pose().pose.position.z]))
+                print("===================================================")
             elif key == ' ' or key == '5' :
+                status = status + 5
                 target_linear_vel   = 0.0
                 control_linear_vel  = 0.0
                 target_angular_vel  = 0.0
                 control_angular_vel = 0.0
-                print(vels(target_linear_vel, target_angular_vel))
+                print("===================================================")
+                print(vels(target_linear_vel,target_angular_vel))
+                print(joints(arm.get_current_joint_values()))
+                print(kinematics([arm.get_current_pose().pose.position.x, arm.get_current_pose().pose.position.y, arm.get_current_pose().pose.position.z]))
+                print("===================================================")
             elif key == '0':
-                status += 1
+                status = status + 5
                 joint_values = arm.get_current_joint_values() # How to get joint states
                 joint_values[0] = 0
                 joint_values[1] = 0
@@ -176,18 +199,24 @@ if __name__=="__main__":
                 arm.go(joints = joint_values, wait = True)
 
                 print("[!] Wait until execution of arm finishes...")
-                # rospy.sleep(5)
-                time.sleep(6)
+                rospy.sleep(5)
+                # time.sleep(6)
 
                 arm.stop()
                 arm.clear_pose_targets()
                 
-                print("[!] Execution of Init Pose finished")
+                # time.sleep(1)
 
+                print("[!] Execution of Init Pose finished")
+                print("===================================================")
+                print(vels(target_linear_vel,target_angular_vel))
+                print(joints(arm.get_current_joint_values()))
+                print(kinematics([arm.get_current_pose().pose.position.x, arm.get_current_pose().pose.position.y, arm.get_current_pose().pose.position.z]))
+                print("===================================================")
 
 
             elif key == '1':
-                status += 1
+                status = status + 5
                 joint_values = arm.get_current_joint_values() # How to get joint states
                 joint_values[0] = -0
                 joint_values[1] = -1.0
@@ -200,18 +229,45 @@ if __name__=="__main__":
                 arm.go(joints = joint_values, wait = True)
 
                 print("[!] Wait until execution of arm finishes...")
-                # rospy.sleep(5)
-                time.sleep(6)
+                rospy.sleep(5)
+                # time.sleep(6)
 
                 arm.stop()
                 arm.clear_pose_targets()
                 
+                # time.sleep(1)
+
                 print("[!] Execution of Home Pose finished...")
+                print("===================================================")
+                print(vels(target_linear_vel,target_angular_vel))
+                print(joints(arm.get_current_joint_values()))
+                print(kinematics([arm.get_current_pose().pose.position.x, arm.get_current_pose().pose.position.y, arm.get_current_pose().pose.position.z]))
+                print("===================================================")
 
             elif key == 'g':
-                continue
+                status = status + 5
+                gripper.set_joint_value_target([0.01, 0.01])
+                gripper.go(wait = True)
+                rospy.sleep(1)
+                gripper.stop()
+                gripper.clear_pose_targets()
+                print("===================================================")
+                print(vels(target_linear_vel,target_angular_vel))
+                print(joints(arm.get_current_joint_values()))
+                print(kinematics([arm.get_current_pose().pose.position.x, arm.get_current_pose().pose.position.y, arm.get_current_pose().pose.position.z]))
+                print("===================================================")
             elif key == 'f':
-                continue
+                status = status + 5
+                gripper.set_joint_value_target([-0.01, -0.01])
+                gripper.go(wait = True)
+                rospy.sleep(1)
+                gripper.stop()
+                gripper.clear_pose_targets()
+                print("===================================================")
+                print(vels(target_linear_vel,target_angular_vel))
+                print(joints(arm.get_current_joint_values()))
+                print(kinematics([arm.get_current_pose().pose.position.x, arm.get_current_pose().pose.position.y, arm.get_current_pose().pose.position.z]))
+                print("===================================================")
             else:
                 if (key == '\x03') or (key == 'q'):
                     break
