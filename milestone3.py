@@ -29,7 +29,7 @@
 
 import rospy
 from geometry_msgs.msg import Twist
-import sys, select, os
+import sys, select, os, time
 import copy
 import moveit_commander
 import moveit_msgs.msg
@@ -96,8 +96,23 @@ def getKey():
     termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
     return key
 
+
+
+
+
 def vels(target_linear_vel, target_angular_vel):
-    return "currently:\tlinear vel %s\t angular vel %s " % (target_linear_vel,target_angular_vel)
+    return "Present Linear Velocity: %s, Angular Velocity: %s " % (target_linear_vel,target_angular_vel)
+
+def joints(joint):
+    return "Present Joint Angle J1: %s J2: %s J3: %s J4: %s " % (joint[0], joint[1], joint[2], joint[3])
+
+def kinematics(pose):
+    return "Present Kinematics Position X: %s Y: %s Z: %s " % (pose[0], pose[1], pose[2])    
+
+
+
+
+
 
 def makeSimpleProfile(output, input, slop):
     if input > output:
@@ -190,6 +205,7 @@ if __name__=="__main__":
                 control_angular_vel = 0.0
                 print(vels(target_linear_vel, target_angular_vel))
             elif key == '0':
+                status += 1
                 joint_values = arm.get_current_joint_values() # How to get joint states
                 joint_values[0] = 0
                 joint_values[1] = 0
@@ -203,12 +219,17 @@ if __name__=="__main__":
 
                 print("[!] Wait until execution of arm finishes...")
                 # rospy.sleep(5)
+                time.sleep(6)
 
                 arm.stop()
                 arm.clear_pose_targets()
                 
                 print("[!] Execution of Init Pose finished")
+
+
+
             elif key == '1':
+                status += 1
                 joint_values = arm.get_current_joint_values() # How to get joint states
                 joint_values[0] = -0
                 joint_values[1] = -1.0
@@ -222,6 +243,7 @@ if __name__=="__main__":
 
                 print("[!] Wait until execution of arm finishes...")
                 # rospy.sleep(5)
+                time.sleep(6)
 
                 arm.stop()
                 arm.clear_pose_targets()
