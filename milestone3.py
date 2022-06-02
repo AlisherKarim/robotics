@@ -1,35 +1,8 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2011, Willow Garage, Inc.
-# All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-#
-#    * Redistributions of source code must retain the above copyright
-#      notice, this list of conditions and the following disclaimer.
-#    * Redistributions in binary form must reproduce the above copyright
-#      notice, this list of conditions and the following disclaimer in the
-#      documentation and/or other materials provided with the distribution.
-#    * Neither the name of the Willow Garage, Inc. nor the names of its
-#      contributors may be used to endorse or promote products derived from
-#       this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
-# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
-
 import rospy
 from geometry_msgs.msg import Twist
-import sys, select, os
+import sys, select, os, time
 import copy
 import moveit_commander
 import moveit_msgs.msg
@@ -38,9 +11,6 @@ if os.name == 'nt':
   import msvcrt, time
 else:
   import tty, termios
-
-BURGER_MAX_LIN_VEL = 0.22
-BURGER_MAX_ANG_VEL = 2.84
 
 WAFFLE_MAX_LIN_VEL = 0.26
 WAFFLE_MAX_ANG_VEL = 1.82
@@ -96,8 +66,23 @@ def getKey():
     termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
     return key
 
+
+
+
+
 def vels(target_linear_vel, target_angular_vel):
-    return "currently:\tlinear vel %s\t angular vel %s " % (target_linear_vel,target_angular_vel)
+    return "Present Linear Velocity: %s, Angular Velocity: %s " % (target_linear_vel,target_angular_vel)
+
+def joints(joint):
+    return "Present Joint Angle J1: %s J2: %s J3: %s J4: %s " % (joint[0], joint[1], joint[2], joint[3])
+
+def kinematics(pose):
+    return "Present Kinematics Position X: %s Y: %s Z: %s " % (pose[0], pose[1], pose[2])    
+
+
+
+
+
 
 def makeSimpleProfile(output, input, slop):
     if input > output:
@@ -120,24 +105,12 @@ def constrain(input, low, high):
     return input
 
 def checkLinearLimitVelocity(vel):
-    if turtlebot3_model == "burger":
-      vel = constrain(vel, -BURGER_MAX_LIN_VEL, BURGER_MAX_LIN_VEL)
-    elif turtlebot3_model == "waffle" or turtlebot3_model == "waffle_pi":
-      vel = constrain(vel, -WAFFLE_MAX_LIN_VEL, WAFFLE_MAX_LIN_VEL)
-    else:
-      vel = constrain(vel, -BURGER_MAX_LIN_VEL, BURGER_MAX_LIN_VEL)
+    return constrain(vel, -WAFFLE_MAX_LIN_VEL, WAFFLE_MAX_LIN_VEL)
 
-    return vel
 
 def checkAngularLimitVelocity(vel):
-    if turtlebot3_model == "burger":
-      vel = constrain(vel, -BURGER_MAX_ANG_VEL, BURGER_MAX_ANG_VEL)
-    elif turtlebot3_model == "waffle" or turtlebot3_model == "waffle_pi":
-      vel = constrain(vel, -WAFFLE_MAX_ANG_VEL, WAFFLE_MAX_ANG_VEL)
-    else:
-      vel = constrain(vel, -BURGER_MAX_ANG_VEL, BURGER_MAX_ANG_VEL)
+    return constrain(vel, -WAFFLE_MAX_ANG_VEL, WAFFLE_MAX_ANG_VEL)
 
-    return vel
 
 if __name__=="__main__":
     if os.name != 'nt':
@@ -190,6 +163,7 @@ if __name__=="__main__":
                 control_angular_vel = 0.0
                 print(vels(target_linear_vel, target_angular_vel))
             elif key == '0':
+                status += 1
                 joint_values = arm.get_current_joint_values() # How to get joint states
                 joint_values[0] = 0
                 joint_values[1] = 0
@@ -203,12 +177,17 @@ if __name__=="__main__":
 
                 print("[!] Wait until execution of arm finishes...")
                 # rospy.sleep(5)
+                time.sleep(6)
 
                 arm.stop()
                 arm.clear_pose_targets()
                 
                 print("[!] Execution of Init Pose finished")
+
+
+
             elif key == '1':
+                status += 1
                 joint_values = arm.get_current_joint_values() # How to get joint states
                 joint_values[0] = -0
                 joint_values[1] = -1.0
@@ -222,6 +201,7 @@ if __name__=="__main__":
 
                 print("[!] Wait until execution of arm finishes...")
                 # rospy.sleep(5)
+                time.sleep(6)
 
                 arm.stop()
                 arm.clear_pose_targets()
