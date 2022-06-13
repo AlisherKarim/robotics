@@ -81,6 +81,7 @@ class image_converter:
         print("xmin:", box.xmin, "xmax:", box.xmax)
         bottle_center = (box.xmin + box.xmax) // 2
         print("Center:", bottle_center)
+        print("Width:", box.xmax - box.xmin)
         if bottle_center < 600:
           self.target_angular_vel = checkAngularLimitVelocity(ANG_VEL_STEP_SIZE)
           twist = Twist()
