@@ -81,7 +81,7 @@ class myRobot():
         self.bridge = CvBridge()
         self.image_sub = rospy.Subscriber("/video_source/raw",Image,self.cv_callback)
 
-        moveit_commander.roscpp_initialize() #moveit itself init
+        moveit_commander.roscpp_initialize(sys.argv) #moveit itself init
         self.moveit_robot = moveit_commander.RobotCommander() # robot’s kinematic model and the robot’s current joint states
         self.scene = moveit_commander.PlanningSceneInterface() #remote interface for getting, setting, and updating the robot’s internal understanding of the surrounding world
         self.arm = moveit_commander.MoveGroupCommander('arm') # name of movegroup 1 is “arm”
@@ -93,38 +93,42 @@ class myRobot():
     # ========================== helper functions to control robot ==============================
 
     def close_gripper(self):
-        self.gripper.set_joint_value_target([0.01, 0.01])
+        print("[!] CLOSE GRIPPER SIGNAL")
+        self.gripper.set_joint_value_target([0.003, 0.003])
         self.gripper.go(wait = True)
-        rospy.sleep(1)
+        rospy.sleep(2)
         self.gripper.stop()
         self.gripper.clear_pose_targets()
     
     def open_gripper(self):
-        self.gripper.set_joint_value_target([-0.01, -0.01])
+        print("[!] OPEN GRIPPER SIGNAL")
+        self.gripper.set_joint_value_target([0.01, 0.01])
         self.gripper.go(wait = True)
-        rospy.sleep(1)
+        rospy.sleep(2)
         self.gripper.stop()
         self.gripper.clear_pose_targets()
 
     def arm_down(self):
+        print("[!] ARM DOWN")
         joint_values = self.arm.get_current_joint_values() # How to get joint states
-        joint_values[0] = 0
-        joint_values[1] = 0
-        joint_values[2] = 0
-        joint_values[3] = 0
+        joint_values[0] = 0.003
+        joint_values[1] = 1.27
+        joint_values[2] = -0.76
+        joint_values[3] = -0.25
         self.arm.go(joints = joint_values, wait = True)
-        rospy.sleep(5)     # FIXME change if possible to 7
+        rospy.sleep(10)     # FIXME change if possible to 7
         self.arm.stop()
         self.arm.clear_pose_targets()
 
     def arm_up(self):
+        print("[!] ARM UP")
         joint_values = self.arm.get_current_joint_values() # How to get joint states
-        joint_values[0] = 0
-        joint_values[1] = 0
-        joint_values[2] = 0
-        joint_values[3] = 0
+        joint_values[0] = -0
+        joint_values[1] = -1.0
+        joint_values[2] = 0.3
+        joint_values[3] = 0.7
         self.arm.go(joints = joint_values, wait = True)
-        rospy.sleep(5)     # FIXME change if possible to 7
+        rospy.sleep(10)     # FIXME change if possible to 7
         self.arm.stop()
         self.arm.clear_pose_targets()
 
@@ -350,14 +354,14 @@ class myRobot():
                 if bottle_center < 600:
                     self.target_angular_vel = checkAngularLimitVelocity(ANG_VEL_STEP_SIZE)
                     self.publish_twist()
-                elif bottle_center > 700:
+                elif bottle_center > 680:
                     self.target_angular_vel = checkAngularLimitVelocity(-ANG_VEL_STEP_SIZE)
                     self.publish_twist()
                 else:
-                    print("[!] Unsubscribed from find_bottle [BoundingBoxes]...")
+                    print("[!] Unregistered from find_bottle [BoundingBoxes]...")
                     self.target_angular_vel = 0.0
                     self.publish_twist() # stop angular velocity
-                    self.box_sub.unsubscribe()    # here we see the bottle and it is in the center
+                    self.box_sub.unregister()    # here we see the bottle and it is in the center
                     print("[!] Execute go forward and pick-up...")
                     if self.current_task == 1:
                         self.bottle_found_t1()
@@ -389,12 +393,18 @@ class myRobot():
                     if self.current_task == 2:                # FIXME fix task if needed
                         self.action_duration = int(time.time()- self.action_start_time)
                     
-                    self.boxsize_sub.unsubscribe()
+                    self.boxsize_sub.unregister()
                     if self.current_task == 1:
                         self.bottle_in_front_t1()
                     elif self.current_task == 2:
                         self.bottle_in_front_t2()
                     break
+
+                else:
+                    print("[!] [approach_bottle_check_size] Just go forward - small width...")
+                    self.target_linear_vel = LIN_VEL_STEP_SIZE
+                    self.target_angular_vel = 0.0
+                    self.publish_twist()
             else:
                 print("[!] [approach_bottle_check_size] I don't see the bottle")
                 self.target_angular_vel = 0
@@ -454,8 +464,10 @@ def main(args):
         task2(turtle)
     elif args[1] == '3':
         task3(turtle)
-    else:
+    elif args[1] == '4':
         task4(turtle)
+    else:
+        print("[ERROR] Type only 1, 2, 3 or 4")
 
 
 if __name__ == "__main__":
