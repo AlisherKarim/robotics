@@ -81,13 +81,13 @@ class image_converter:
         print("xmin:", box.xmin, "xmax:", box.xmax)
         bottle_center = (box.xmin + box.xmax) // 2
         print("Center:", bottle_center)
-        if bottle_center < 600:
+        if bottle_center < 640:
           self.target_angular_vel = checkAngularLimitVelocity(ANG_VEL_STEP_SIZE)
           twist = Twist()
           self.control_angular_vel = makeSimpleProfile(self.control_angular_vel, self.target_angular_vel, (ANG_VEL_STEP_SIZE/2.0))
           twist.angular.x = 0.0; twist.angular.y = 0.0; twist.angular.z = self.control_angular_vel
           self.pub.publish(twist)
-        elif bottle_center > 700:
+        elif bottle_center > 670:
           self.target_angular_vel = checkAngularLimitVelocity(-ANG_VEL_STEP_SIZE)
           twist = Twist()
           self.control_angular_vel = makeSimpleProfile(self.control_angular_vel, self.target_angular_vel, (ANG_VEL_STEP_SIZE/2.0))
