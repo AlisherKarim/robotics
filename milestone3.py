@@ -188,10 +188,10 @@ if __name__=="__main__":
             elif key == '0':
                 status = status + 5
                 joint_values = arm.get_current_joint_values() # How to get joint states
-                joint_values[0] = 0.003
-                joint_values[1] = 1.27
-                joint_values[2] = -0.76
-                joint_values[3] = -0.25
+                joint_values[0] = 0
+                joint_values[1] = 1.10
+                joint_values[2] = -0.5
+                joint_values[3] = 0
 
                 print("Init Position...")
 
@@ -258,7 +258,7 @@ if __name__=="__main__":
                 print("===================================================")
             elif key == 'f':
                 status = status + 5
-                gripper.set_joint_value_target([0.003, 0.003])
+                gripper.set_joint_value_target([0.0025, 0.0025])
                 gripper.go(wait = True)
                 rospy.sleep(1)
                 gripper.stop()
