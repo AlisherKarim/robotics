@@ -5,7 +5,7 @@ import roslib
 import sys
 import rospy
 import cv2
-from std_msgs.msg import String
+from std_msgs.msg import String, Int64
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 from darknet_ros_msgs.msg import BoundingBoxes
@@ -56,6 +56,8 @@ class image_converter:
     self.image_sub = rospy.Subscriber("/video_source/raw",Image,self.callback)
     self.sub = rospy.Subscriber("/darknet_ros/bounding_boxes", BoundingBoxes, self.callback_fn) 
 
+    self.publisher = rospy.Publisher('box/width', Int64, queue_size = 10)
+
     self.pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
     self.turtlebot3_model = rospy.get_param("model", "burger")
     self.target_linear_vel   = 0.0
@@ -76,32 +78,14 @@ class image_converter:
   def callback_fn(self, data):
     for box in data.bounding_boxes:
       print("I see: " + box.Class)
-      if box.id == 39:         # if not working change to box.Class == "bottle"
+      if box.id == 39 or box.Class == 'vase':         # if not working change to box.Class == "bottle"
         print("Here is a bottle")
         print("xmin:", box.xmin, "xmax:", box.xmax)
         bottle_center = (box.xmin + box.xmax) // 2
         print("Center:", bottle_center)
         print("Width:", box.xmax - box.xmin)
-        if bottle_center < 640:
-          self.target_angular_vel = checkAngularLimitVelocity(ANG_VEL_STEP_SIZE)
-          twist = Twist()
-          self.control_angular_vel = makeSimpleProfile(self.control_angular_vel, self.target_angular_vel, (ANG_VEL_STEP_SIZE/2.0))
-          twist.angular.x = 0.0; twist.angular.y = 0.0; twist.angular.z = self.control_angular_vel
-          self.pub.publish(twist)
-        elif bottle_center > 670:
-          self.target_angular_vel = checkAngularLimitVelocity(-ANG_VEL_STEP_SIZE)
-          twist = Twist()
-          self.control_angular_vel = makeSimpleProfile(self.control_angular_vel, self.target_angular_vel, (ANG_VEL_STEP_SIZE/2.0))
-          twist.angular.x = 0.0; twist.angular.y = 0.0; twist.angular.z = self.control_angular_vel
-          self.pub.publish(twist)
-        else:
-          self.target_angular_vel = 0.0
-          twist = Twist()
-          self.control_angular_vel = makeSimpleProfile(self.control_angular_vel, self.target_angular_vel, (ANG_VEL_STEP_SIZE/2.0))
-          twist.angular.x = 0.0; twist.angular.y = 0.0; twist.angular.z = self.control_angular_vel
-          self.pub.publish(twist)
-
-
+        self.publisher.publish(box.xmax - box.xmin)
+         
 def main(args):
   ic = image_converter()
   rospy.init_node('image_converter', anonymous=True)
