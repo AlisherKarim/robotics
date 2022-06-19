@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from __future__ import print_function
+import queue
 
 import roslib
 import sys
@@ -57,13 +58,9 @@ class image_converter:
     self.sub = rospy.Subscriber("/darknet_ros/bounding_boxes", BoundingBoxes, self.callback_fn) 
 
     self.publisher = rospy.Publisher('box/width', Int64, queue_size = 10)
-
-    self.pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
-    self.turtlebot3_model = rospy.get_param("model", "burger")
-    self.target_linear_vel   = 0.0
-    self.target_angular_vel  = 0.0
-    self.control_linear_vel  = 0.0
-    self.control_angular_vel = 0.0
+    self.xmin_publisher = rospy.Publisher('box/xmin', Int64, queue_size = 10)
+    self.xmax_publisher = rospy.Publisher('box/xmax', Int64, queue_size = 10)
+    self.item_publisher = rospy.Publisher('box/item', String, queue_size = 10)
 
   def callback(self,data):
     try:
@@ -78,13 +75,18 @@ class image_converter:
   def callback_fn(self, data):
     for box in data.bounding_boxes:
       print("I see: " + box.Class)
-      if box.id == 39 or box.Class == 'vase':         # if not working change to box.Class == "bottle"
+      if box.Class == 'bottle' or box.Class == 'vase':         # if not working change to box.Class == "bottle"
         print("Here is a bottle")
         print("xmin:", box.xmin, "xmax:", box.xmax)
         bottle_center = (box.xmin + box.xmax) // 2
         print("Center:", bottle_center)
         print("Width:", box.xmax - box.xmin)
         self.publisher.publish(box.xmax - box.xmin)
+        self.xmin_publisher.publish(box.xmin)
+        self.xmax_publisher.publish(box.xmax)
+        self.item_publisher.publish("bottle")
+      else:
+        self.item_publisher.publish("other")
          
 def main(args):
   ic = image_converter()
