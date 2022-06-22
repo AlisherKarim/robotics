@@ -168,6 +168,9 @@ class myRobot():
 
     # ========================== task1 functions ==============================================
     def init_task1(self):
+
+        self.go_forward(1)
+
         self.current_task = 1
         self.bottle_in_the_center = False
 
