@@ -57,10 +57,10 @@ class image_converter:
     self.image_sub = rospy.Subscriber("/video_source/raw",Image,self.callback)
     self.sub = rospy.Subscriber("/darknet_ros/bounding_boxes", BoundingBoxes, self.callback_fn) 
 
-    self.publisher = rospy.Publisher('box/width', Int64, queue_size = 10)
-    self.xmin_publisher = rospy.Publisher('box/xmin', Int64, queue_size = 10)
-    self.xmax_publisher = rospy.Publisher('box/xmax', Int64, queue_size = 10)
-    self.item_publisher = rospy.Publisher('box/item', String, queue_size = 10)
+    self.publisher = rospy.Publisher('/box/width', Int64, queue_size = 10)
+    self.xmin_publisher = rospy.Publisher('/box/xmin', Int64, queue_size = 10)
+    self.xmax_publisher = rospy.Publisher('/box/xmax', Int64, queue_size = 10)
+    self.item_publisher = rospy.Publisher('/box/item', String, queue_size = 10)
 
   def callback(self,data):
     try:
