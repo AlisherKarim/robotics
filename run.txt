@@ -1,0 +1,31 @@
+roscore
+
+// in turtlebot
+roslaunch turtlebot3_bringup turtlebot3_robot.launch
+
+// in nvidia
+roslaunch ros_deep_learning video_source.ros1.launch input:=csi://0
+output:=display://0
+
+roslaunch darknet_ros darknet_ros.launch
+
+python3 milestone4.py
+
+
+//simulation
+roslaunch turtlebot3_manipulation_gazebo turtlebot3_manipulation_gazebo.launch
+
+
+//arm 
+roslaunch turtlebot3_manipulation_moveit_config move_group.launch
+
+
+// on pc
+python final_v2.py
+
+
+
+
+
+
+roslaunch turtlebot3_teleop turtlebot3_teleop_key.launch

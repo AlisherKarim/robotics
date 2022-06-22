@@ -8,6 +8,7 @@ from __future__ import print_function
 
 import sys
 import time
+import turtle
 
 import cv2
 import geometry_msgs.msg
@@ -16,7 +17,6 @@ import moveit_msgs.msg
 import roslib
 import rospy
 from cv_bridge import CvBridge, CvBridgeError
-from darknet_ros_msgs.msg import BoundingBoxes
 # from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from datetime import datetime
 from geometry_msgs.msg import Twist
@@ -175,28 +175,24 @@ class myRobot():
 
         while not rospy.is_shutdown():
             box_center = (self.bottle_xmax + self.bottle_xmin) // 2
-
-            if self.bottle_width >= TOO_CLOSE_BOTTLE_WIDTH:
-                self.target_linear_vel = -LIN_VEL_STEP_SIZE
-                
             if box_center < 630:
+                self.target_angular_vel = -ANG_VEL_STEP_SIZE
+            elif box_center > 670:
                 self.target_angular_vel = ANG_VEL_STEP_SIZE
-
-            if box_center > 670:
-                self.target_angular_vel = ANG_VEL_STEP_SIZE
-
-            
-            if 630 < box_center < 670:
+            else:
                 self.target_angular_vel = 0
             
-            if CLOSE_BOTTLE_WIDTH <= self.bottle_width <= TOO_CLOSE_BOTTLE_WIDTH:
+            if self.bottle_width >= TOO_CLOSE_BOTTLE_WIDTH:
+                self.target_linear_vel = -LIN_VEL_STEP_SIZE
+            elif self.bottle_width < CLOSE_BOTTLE_WIDTH:
+                self.target_linear_vel = LIN_VEL_STEP_SIZE
+            else:
                 self.target_linear_vel = 0
 
             self.publish_twist()
 
             if self.target_angular_vel == 0 and self.target_linear_vel == 0:
                 break
-
             rate.sleep()
         
         self.pick_up_bottle()
@@ -212,7 +208,7 @@ class myRobot():
         self.task2_finished = False
         self.current_task = 2
         # turn RIGHT to around 30-40 degrees
-        self.rotate(45, -10)
+        self.rotate(60, -10)
 
         # start turning to left 
         print("[!] Turn left...")
@@ -232,47 +228,36 @@ class myRobot():
 
         while not rospy.is_shutdown():
             box_center = (self.bottle_xmax + self.bottle_xmin) // 2
-
-            if self.bottle_width >= TOO_CLOSE_BOTTLE_WIDTH:
-                self.target_linear_vel = -LIN_VEL_STEP_SIZE
-                
             if box_center < 630:
+                self.target_angular_vel = -ANG_VEL_STEP_SIZE
+            elif box_center > 670:
                 self.target_angular_vel = ANG_VEL_STEP_SIZE
-
-            if box_center > 670:
-                self.target_angular_vel = ANG_VEL_STEP_SIZE
-
-            
-            if 630 < box_center < 670:
+            else:
                 self.target_angular_vel = 0
             
-            if CLOSE_BOTTLE_WIDTH <= self.bottle_width <= TOO_CLOSE_BOTTLE_WIDTH:
+            if self.bottle_width >= TOO_CLOSE_BOTTLE_WIDTH:
+                self.target_linear_vel = -LIN_VEL_STEP_SIZE
+            elif self.bottle_width < CLOSE_BOTTLE_WIDTH:
+                self.target_linear_vel = LIN_VEL_STEP_SIZE
+            else:
                 self.target_linear_vel = 0
 
             self.publish_twist()
 
             if self.target_angular_vel == 0 and self.target_linear_vel == 0:
                 break
-
             rate.sleep()
 
         self.bottle_in_front_t2()
-
-        
-    def bottle_found_t2(self):
-        self.boxsize_sub = rospy.Subscriber("/darknet_ros/bounding_boxes", BoundingBoxes, self.approach_bottle_check_size)
-        self.go_forward_to_bottle()
-        self.action_start_time = rospy.Time.now().to_sec()
-        self.action_duration = 0
     
     def bottle_in_front_t2(self):
         self.pick_up_bottle()
         # turning 180 backward
-        self.rotate(180, 10)                    # FIXME
+        self.rotate(190, 10)                    # FIXME
         # go forward
         
         self.target_linear_vel = LIN_VEL_STEP_SIZE
-        while(self.front_distance > 0.45):
+        while(self.front_distance > 0.45):      # FIXME, maybe add rate.sleep()?
             self.publish_twist()
 
         self.target_linear_vel = 0
@@ -291,7 +276,7 @@ class myRobot():
         
     def second_bottle(self):
         # turn RIGHT to around 30-40 degrees
-        self.rotate(45, -10)
+        self.rotate(190, -10)
 
         # start turning to left 
         print("[!] Turn left...")
@@ -311,28 +296,24 @@ class myRobot():
 
         while not rospy.is_shutdown():
             box_center = (self.bottle_xmax + self.bottle_xmin) // 2
-
-            if self.bottle_width >= TOO_CLOSE_BOTTLE_WIDTH:
-                self.target_linear_vel = -LIN_VEL_STEP_SIZE
-                
             if box_center < 630:
+                self.target_angular_vel = -ANG_VEL_STEP_SIZE
+            elif box_center > 670:
                 self.target_angular_vel = ANG_VEL_STEP_SIZE
-
-            if box_center > 670:
-                self.target_angular_vel = ANG_VEL_STEP_SIZE
-
-            
-            if 630 < box_center < 670:
+            else:
                 self.target_angular_vel = 0
             
-            if CLOSE_BOTTLE_WIDTH <= self.bottle_width <= TOO_CLOSE_BOTTLE_WIDTH:
+            if self.bottle_width >= TOO_CLOSE_BOTTLE_WIDTH:
+                self.target_linear_vel = -LIN_VEL_STEP_SIZE
+            elif self.bottle_width < CLOSE_BOTTLE_WIDTH:
+                self.target_linear_vel = LIN_VEL_STEP_SIZE
+            else:
                 self.target_linear_vel = 0
 
             self.publish_twist()
 
             if self.target_angular_vel == 0 and self.target_linear_vel == 0:
                 break
-
             rate.sleep()
 
         self.task2_finished = True
@@ -343,14 +324,70 @@ class myRobot():
     def init_task3(self):
         self.current_task = 3
         # maybe go forward 15 cm
-        self.rotate(45, 30)
-        self.go_forward(3)
-        self.rotate(90, 30)
-        self.go_forward(1)
-        self.rotate(90)
-        self.box_sub = rospy.Subscriber("/darknet_ros/bounding_boxes", BoundingBoxes, self.find_bottle)
+        self.rotate(40, 10)
+        # self.go_forward(3)
 
+        r = rospy.Rate(10)
+
+        self.target_linear_vel = LIN_VEL_STEP_SIZE
+        while(self.front_distance > 0.45):      # FIXME
+            self.publish_twist()
+            r.sleep()
+
+        self.target_linear_vel = 0
+        self.publish_twist()
+
+        self.rotate(90, -10)
+        self.go_forward(1)                      # FIXME
+        self.rotate(90)
+
+        while not rospy.is_shutdown():
+            box_center = (self.bottle_xmax + self.bottle_xmin) // 2
+            if box_center < 630:
+                self.target_angular_vel = -ANG_VEL_STEP_SIZE
+            elif box_center > 670:
+                self.target_angular_vel = ANG_VEL_STEP_SIZE
+            else:
+                self.target_angular_vel = 0
+            
+            if self.bottle_width >= TOO_CLOSE_BOTTLE_WIDTH:
+                self.target_linear_vel = -LIN_VEL_STEP_SIZE
+            elif self.bottle_width < CLOSE_BOTTLE_WIDTH:
+                self.target_linear_vel = LIN_VEL_STEP_SIZE
+            else:
+                self.target_linear_vel = 0
+
+            self.publish_twist()
+
+            if self.target_angular_vel == 0 and self.target_linear_vel == 0:
+                break
+            r.sleep()
+
+        self.pick_up_bottle()
         
+        self.rotate(190, 10)
+        self.rotate(90, 10)
+        
+        self.target_linear_vel = LIN_VEL_STEP_SIZE
+        while(self.front_distance > 0.45):      # FIXME
+            self.publish_twist()
+            r.sleep()
+
+        self.target_linear_vel = 0
+        self.publish_twist()
+
+        self.rotate(90, 10)
+
+        self.target_linear_vel = LIN_VEL_STEP_SIZE
+        while(self.front_distance > 0.45):      # FIXME
+            self.publish_twist()
+            r.sleep()
+
+        self.target_linear_vel = 0
+        self.publish_twist()
+
+        self.put_down_bottle()
+
     
     def rotate(self, angle, speed):
         print("[!] [Rotate]", angle)
@@ -392,54 +429,127 @@ class myRobot():
         self.publish_twist()
 
 
-    def bottle_found_t3(self):
-        print("[!] [task3] Bottle found")
-        self.distance = 0
-        self.t0 = rospy.Time.now().to_sec()
-        self.boxsize_sub = rospy.Subscriber("/darknet_ros/bounding_boxes", BoundingBoxes, self.check_bottle_size_and_approach)
-
-    def check_bottle_size_and_approach(self, data):
-        for box in data.bounding_boxes:
-            print("[!] [task3] I see " + box.Class)
-            if box.Class == "bottle":
-                print("[!] [task3] xmin:", box.xmin, "xmax:", box.xmax)
-                bottle_width = box.xmax - box.xmin
-                print("[!] [check_bottle_size_and_approach] Width:", bottle_width)
-                # print("[!] [approach_bottle_check_size] Center:", bottle_center)
-                if bottle_width >= CLOSE_BOTTLE_WIDTH:
-                    self.target_angular_vel = 0
-                    self.target_linear_vel = 0
-                    self.publish_twist()
-                    self.distance = (rospy.Time.now().to_sec() - self.t0) * LIN_VEL_STEP_SIZE
-                    self.boxsize_sub.unsubscribe()
-                    self.bottle_in_front_t3()
-                    break
-                else:
-                    self.target_linear_vel = LIN_VEL_STEP_SIZE
-                    self.publish_twist()
-            else:
-                self.target_angular_vel = 0
-                self.target_linear_vel = 0
-                self.publish_twist()
-
-
-    def bottle_in_front_t3(self):
-        print("[!] [task3] Go Home...")
-        self.pick_up_bottle()
-        self.rotate(180, 30)
-        self.go_forward(self.distance)
-        self.rotate(-90, 30)
-        self.go_forward(1)
-        self.rotate(-90, 30)
-        self.go_forward(3)
-        print("[!] [task3] ShutDown() robot...")
-        self.shutDown()
-
-
     # ========================== task4 functions ==============================================
 
+    def init_task4(self):
+        # turn RIGHT to around 30-40 degrees
+        self.rotate(60, -10)
 
+        # start turning to left 
+        print("[!] Turn left...")
+        
+        rate = rospy.Rate(10)
 
+        # rotate while bottle not seen
+        self.target_angular_vel = ANG_VEL_STEP_SIZE
+
+        while not rospy.is_shutdown():
+            if self.bottle_item:
+                self.target_angular_vel = 0
+                self.publish_twist()
+                break
+            self.publish_twist()
+            rate.sleep()
+
+        while not rospy.is_shutdown():
+            box_center = (self.bottle_xmax + self.bottle_xmin) // 2
+            if box_center < 630:
+                self.target_angular_vel = -ANG_VEL_STEP_SIZE
+            elif box_center > 670:
+                self.target_angular_vel = ANG_VEL_STEP_SIZE
+            else:
+                self.target_angular_vel = 0
+            
+            if self.bottle_width >= TOO_CLOSE_BOTTLE_WIDTH:
+                self.target_linear_vel = -LIN_VEL_STEP_SIZE
+            elif self.bottle_width < CLOSE_BOTTLE_WIDTH:
+                self.target_linear_vel = LIN_VEL_STEP_SIZE
+            else:
+                self.target_linear_vel = 0
+
+            self.publish_twist()
+
+            if self.target_angular_vel == 0 and self.target_linear_vel == 0:
+                break
+            rate.sleep()
+
+        self.pick_up_bottle()
+        self.rotate(190, 10)
+
+        r = rospy.Rate(10)
+
+        self.target_linear_vel = LIN_VEL_STEP_SIZE
+        while(self.front_distance > 0.45):      # FIXME
+            self.publish_twist()
+            r.sleep()
+
+        self.target_linear_vel = 0
+        self.publish_twist()
+
+        self.rotate(90, -10)                    # FIXME
+
+        r = rospy.Rate(10)
+
+        self.target_linear_vel = LIN_VEL_STEP_SIZE
+        while(self.front_distance > 0.45):      # FIXME
+            self.publish_twist()
+            r.sleep()
+
+        self.target_linear_vel = 0
+        self.publish_twist()
+
+        self.put_down_bottle()
+
+        self.rotate(90, -10)
+        self.go_forward(1)                      # FIXME
+        self.rotate(90)
+
+        while not rospy.is_shutdown():
+            box_center = (self.bottle_xmax + self.bottle_xmin) // 2
+            if box_center < 630:
+                self.target_angular_vel = -ANG_VEL_STEP_SIZE
+            elif box_center > 670:
+                self.target_angular_vel = ANG_VEL_STEP_SIZE
+            else:
+                self.target_angular_vel = 0
+            
+            if self.bottle_width >= TOO_CLOSE_BOTTLE_WIDTH:
+                self.target_linear_vel = -LIN_VEL_STEP_SIZE
+            elif self.bottle_width < CLOSE_BOTTLE_WIDTH:
+                self.target_linear_vel = LIN_VEL_STEP_SIZE
+            else:
+                self.target_linear_vel = 0
+
+            self.publish_twist()
+
+            if self.target_angular_vel == 0 and self.target_linear_vel == 0:
+                break
+            rate.sleep()
+
+        self.pick_up_bottle()
+        
+        self.rotate(190, 10)
+        self.rotate(90, 10)
+        
+        self.target_linear_vel = LIN_VEL_STEP_SIZE
+        while(self.front_distance > 0.45):      # FIXME
+            self.publish_twist()
+            r.sleep()
+
+        self.target_linear_vel = 0
+        self.publish_twist()
+
+        self.rotate(90, 10)
+
+        self.target_linear_vel = LIN_VEL_STEP_SIZE
+        while(self.front_distance > 0.45):      # FIXME
+            self.publish_twist()
+            r.sleep()
+
+        self.target_linear_vel = 0
+        self.publish_twist()
+
+        self.put_down_bottle()
 
     # ========================== other functions ==============================================
 
@@ -476,152 +586,6 @@ class myRobot():
             self.front_distance = data.ranges[0]
 
     # ============================================================================================
-
-    
-
-    def check_bottle_center(self, box):
-        bottle_center = (self.boxXmax + self.boxXmin) // 2
-        print("[!] [CHECK CENTER] Center:", bottle_center)
-        if bottle_center < 600:
-            self.target_linear_vel = 0
-            self.target_angular_vel = checkAngularLimitVelocity(ANG_VEL_STEP_SIZE/2)
-            self.publish_twist()
-            return False
-        elif bottle_center > 690:
-            self.target_linear_vel = 0
-            self.target_angular_vel = checkAngularLimitVelocity(-ANG_VEL_STEP_SIZE/2)
-            self.publish_twist()
-            return False
-        else:
-            self.target_angular_vel = 0.0
-            self.publish_twist()
-            return True
-
-
-
-    def check_bottle_center_close(self, box):
-        bottle_center = (self.boxXmax + self.boxXmin) // 2
-        print("[!] [CHECK CENTER] Center:", bottle_center)
-        if bottle_center < 645:
-            self.target_linear_vel = 0
-            self.target_angular_vel = checkAngularLimitVelocity(ANG_VEL_STEP_SIZE/2)
-            self.publish_twist()
-            return False
-        elif bottle_center > 670:
-            self.target_linear_vel = 0
-            self.target_angular_vel = checkAngularLimitVelocity(-ANG_VEL_STEP_SIZE/2)
-            self.publish_twist()
-            return False
-        else:
-            self.target_angular_vel = 0.0
-            self.publish_twist()
-            return True
-
-
-
-    def find_bottle(self, data):
-        for box in data.bounding_boxes:
-            print("[!] I see: " + box.Class)
-            if box.id == 39:         # if not working change to box.Class == "bottle"
-                print("[!] Here is a bottle")
-                print("[!] xmin:", box.xmin, "xmax:", box.xmax)
-                bottle_center = (box.xmin + box.xmax) // 2
-                print("[!] Center:", bottle_center)
-                if bottle_center < 600:
-                    self.target_angular_vel = checkAngularLimitVelocity(ANG_VEL_STEP_SIZE)
-                    self.publish_twist()
-                elif bottle_center > 690:
-                    self.target_angular_vel = checkAngularLimitVelocity(-ANG_VEL_STEP_SIZE)
-                    self.publish_twist()
-                else:
-                    print("[!] Bottle is in the center")
-                    print("[!] Unregistered from find_bottle [BoundingBoxes]...")
-                    self.target_angular_vel = 0.0
-                    self.publish_twist() # stop angular velocity
-                    self.box_sub.unregister()    # here we see the bottle and it is in the center
-                    print("[!] Execute go forward and pick-up...")
-                    if self.current_task == 1:
-                        self.bottle_found_t1()
-                    elif self.current_task == 2:
-                        self.bottle_found_t2()
-                    elif self.current_task == 3:
-                        self.bottle_found_t3()
-                    break
-            else:
-                print("[!] It is not a bottle")
-                # self.publish_twist()
-
-
-    def approach_bottle_check_size(self, data):
-        pass
-        for box in data.bounding_boxes:
-            print("[!] [approach_bottle_check_size] I see: " + box.Class)
-            if box.id == 39 or box.Class == 'vase':         # if not working change to box.Class == "bottle"
-
-                if not self.check_bottle_center(box):
-                    break
-
-                print("[!] [approach_bottle_check_size] Here is a bottle")
-                print("[!] [approach_bottle_check_size] xmin:", box.xmin, "xmax:", box.xmax)
-                bottle_width = box.xmax - box.xmin
-                bottle_center = (box.xmin + box.xmax) // 2
-                print("[!] [approach_bottle_check_size] Width:", bottle_width)
-                print("[!] [approach_bottle_check_size] bottleWidth:", self.bottleWidth)
-                print("[!] [approach_bottle_check_size] Center:", bottle_center)
-
-                if self.bottleWidth >= TOO_CLOSE_BOTTLE_WIDTH:
-                    print("[!] TOO CLOSE...")
-                    self.target_linear_vel = -LIN_VEL_STEP_SIZE / 4
-                    self.publish_twist()
-                    break
-
-                elif self.bottleWidth >= CLOSE_BOTTLE_WIDTH:
-                    print("[!] Close Enough")
-
-                    if not self.check_bottle_center_close(box):
-                        break
-
-                    self.target_angular_vel = 0
-                    self.target_linear_vel = LIN_VEL_STEP_SIZE / 4
-                    self.publish_twist()
-
-                    rospy.sleep(2)
-
-                    # self.target_angular_vel = 0
-                    # self.target_linear_vel = 0
-                    # self.publish_twist()
-
-                    print("[!] STOP SIGNAL")
-
-                    if self.current_task == 2:                # FIXME fix task if needed
-                        self.action_duration = int(rospy.Time.now().to_sec() - self.action_start_time)
-                    
-                    self.boxsize_sub.unregister()
-                    if self.current_task == 1:
-                        self.bottle_in_front_t1()
-                    elif self.current_task == 2:
-                        self.bottle_in_front_t2()
-                    break
-
-                else:
-                    print("[!] [approach_bottle_check_size] Just go forward - small width...")
-                    self.target_linear_vel = LIN_VEL_STEP_SIZE / 2
-                    self.target_angular_vel = 0.0
-                    self.publish_twist()
-                    break
-            else:
-                print("[!] [approach_bottle_check_size] I don't see the bottle")
-                self.target_angular_vel = 0
-                self.target_linear_vel = 0
-                self.publish_twist()
-                
-    
-    def go_forward_to_bottle(self):
-        # FIXME fix how long should it go, or find distance somehow
-        print("[!] [go_forward_to_bottle] ...")
-        self.target_linear_vel = checkLinearLimitVelocity(self.target_linear_vel + LIN_VEL_STEP_SIZE)
-        self.target_angular_vel = 0.0
-        self.publish_twist()
     
 
 
@@ -650,9 +614,11 @@ def task3(turtle):
     rospy.spin()
 
 
-def task4():
-    # TODO: implement
-    pass
+def task4(turtle):
+    rospy.init_node('find_put_find_return', anonymous=True)
+    turtle.init_task4()
+    rospy.on_shutdown(turtle.goto_init)
+    rospy.spin()
 
 
 def main(args):

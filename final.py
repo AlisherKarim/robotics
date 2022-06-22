@@ -151,9 +151,7 @@ class myRobot():
 
     def publish_twist(self):
         twist = Twist()
-        self.control_linear_vel = makeSimpleProfile(self.control_linear_vel, self.target_linear_vel, (LIN_VEL_STEP_SIZE/2.0))
         twist.linear.x = self.target_linear_vel; twist.linear.y = 0.0; twist.linear.z = 0.0
-        self.control_angular_vel = makeSimpleProfile(self.control_angular_vel, self.target_angular_vel, (ANG_VEL_STEP_SIZE/2.0))
         twist.angular.x = 0.0; twist.angular.y = 0.0; twist.angular.z = self.target_angular_vel
         self.pub.publish(twist)
 
@@ -209,7 +207,7 @@ class myRobot():
         self.task2_finished = False
         self.current_task = 2
         # turn RIGHT to around 30-40 degrees
-        self.rotate(45, -10)
+        self.rotate(50, -10)
 
         # start turning to left 
         print("[!] Turn left...")
@@ -232,7 +230,7 @@ class myRobot():
     def bottle_in_front_t2(self):
         self.pick_up_bottle()
         # turning 180 backward
-        self.rotate(230, 10)                    # FIXME
+        self.rotate(190, 10)                    # FIXME
         # go forward
         
         self.target_linear_vel = LIN_VEL_STEP_SIZE
